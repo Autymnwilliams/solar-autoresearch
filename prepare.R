@@ -49,7 +49,7 @@ START_DATE    <- "20100101"
 END_DATE      <- "20231231"
 TRAIN_END     <- 2018
 VAL_END       <- 2020
-TARGET        <- "GHI"
+TARGET        <- "ALLSKY_SFC_SW_DWN"   # All-sky solar irradiance = our GHI equivalent
 RANDOM_SEED   <- 42
 
 # NASA POWER parameters:
@@ -62,7 +62,7 @@ RANDOM_SEED   <- 42
 # PRECTOTCORR          = Precipitation (mm/day)
 # ALLSKY_SFC_SW_DWN    = All-sky surface shortwave downward irradiance
 # CLRSKY_SFC_SW_DWN    = Clear-sky surface shortwave downward irradiance
-NASA_PARAMS <- "GHI,T2M,T2M_MAX,T2M_MIN,RH2M,WS2M,PRECTOTCORR,ALLSKY_SFC_SW_DWN,CLRSKY_SFC_SW_DWN"
+NASA_PARAMS <- "ALLSKY_SFC_SW_DWN,T2M,T2M_MAX,T2M_MIN,RH2M,WS2M,PRECTOTCORR,CLRSKY_SFC_SW_DWN"
 
 RAW_DIR       <- "data/raw"
 PROCESSED_DIR <- "data/processed"
@@ -152,12 +152,12 @@ engineer_features <- function(df) {
       WS2M_7d_avg        = rollmeanr(lag(WS2M, 1),        7, fill = NA),
       PRECTOTCORR_7d_avg = rollmeanr(lag(PRECTOTCORR, 1), 7, fill = NA),
 
-      # --- Lag features for GHI (yesterday and 7 days ago) ---
-      GHI_lag1    = lag(GHI, 1),
-      GHI_lag7    = lag(GHI, 7),
+      # --- Lag features for solar irradiance (yesterday and 7 days ago) ---
+      GHI_lag1    = lag(ALLSKY_SFC_SW_DWN, 1),
+      GHI_lag7    = lag(ALLSKY_SFC_SW_DWN, 7),
 
       # --- Clear-sky ratio (fraction of max possible solar achieved) ---
-      clearsky_ratio = GHI / (CLRSKY_SFC_SW_DWN + 1e-6)
+      clearsky_ratio = ALLSKY_SFC_SW_DWN / (CLRSKY_SFC_SW_DWN + 1e-6)
     ) %>%
     ungroup() %>%
     filter(!is.na(GHI_lag7))   # drop rows with NA from lag features
@@ -253,7 +253,7 @@ splits <- split_and_save(df_all)
 
 cat("================================================================\n")
 cat("  prepare.R complete. Your data is ready.\n")
-cat(sprintf("  Target variable  : %s (kWh/m2/day)\n", TARGET))
+cat(sprintf("  Target variable  : %s (all-sky solar irradiance, kWh/m2/day)\n", TARGET))
 cat("  Evaluation metric: RMSE (lower is better)\n")
 cat("  Cities           : Phoenix AZ | Chicago IL | Seattle WA\n")
 cat("  Train            : 2010-2018\n")
