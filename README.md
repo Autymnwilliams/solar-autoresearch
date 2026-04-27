@@ -97,8 +97,14 @@ solar-autoresearch/
 
 | Experiment | Val RMSE | Notes |
 |---|---|---|
-| Baseline (lm, doy + T2M) | 1.2917 | Simple linear regression, doy + temperature only |
+| 1 - Baseline (lm, doy + T2M) | 1.2917 | Simple linear regression, doy + temperature only |
+| 2 - Add humidity + wind speed | 1.0693 | ✅ Kept — 17% improvement |
+| 3 - All weather features | 0.9716 | ✅ Best — 25% improvement over baseline |
+| 4 - City as factor variable | 1.0526 | ❌ Reverted — hurt performance |
+| 5 - Add lag features | 1.0276 | ❌ Reverted — hurt performance |
 
+**Current best:** Experiment 3 — all weather features — Val RMSE 0.9716
+**Baseline:** 1.2917 | **Improvement:** 24.8%
 ---
 
 ## Reproducibility Checklist
