@@ -1,0 +1,8 @@
+[
+  {
+    "timestamp": "2026-04-27 12:38:21",
+    "description": "baseline linear regression - doy + temperature",
+    "val_rmse": 1.2917,
+    "runtime_sec": 0
+  }
+]
