@@ -14,7 +14,7 @@ train_model <- function(train, val) {
 
   # --- Define features and target ---
   TARGET   <- "ALLSKY_SFC_SW_DWN"
-  FEATURES <- c("doy_sin", "doy_cos", "T2M", "RH2M", "WS2M")
+  FEATURES <- c("doy_sin", "doy_cos", "T2M", "T2M_MAX", "T2M_MIN", "RH2M", "WS2M", "PRECTOTCORR", "temp_range")
 
   # --- Build formula ---
   formula <- as.formula(paste(TARGET, "~", paste(FEATURES, collapse = " + ")))
