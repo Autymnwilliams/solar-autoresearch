@@ -12,12 +12,16 @@
 
 train_model <- function(train, val) {
 
-  # --- Define features and target ---
-  TARGET   <- "ALLSKY_SFC_SW_DWN"
-  FEATURES <- c("doy_sin", "doy_cos", "T2M", "T2M_MAX", "T2M_MIN", "RH2M", "WS2M", "PRECTOTCORR", "temp_range")
+  TARGET <- "ALLSKY_SFC_SW_DWN"
 
-  # --- Build formula ---
-  formula <- as.formula(paste(TARGET, "~", paste(FEATURES, collapse = " + ")))
+  formula <- as.formula(paste(
+    TARGET,
+    "~ doy_sin + doy_cos + month_sin + month_cos +",
+    "CLRSKY_SFC_SW_DWN + lat + lon +",
+    "T2M + I(T2M^2) + RH2M + I(RH2M^2) + WS2M + PRECTOTCORR + temp_range +",
+    "T2M_7d_avg + RH2M_7d_avg + WS2M_7d_avg + PRECTOTCORR_7d_avg +",
+    "CLRSKY_SFC_SW_DWN:RH2M + CLRSKY_SFC_SW_DWN:PRECTOTCORR"
+  ))
 
   # --- Fit model ---
   model <- lm(formula, data = train)
