@@ -4,5 +4,29 @@
     "description": "baseline linear regression - doy + temperature",
     "val_rmse": 1.2917,
     "runtime_sec": 0
+  },
+  {
+    "timestamp": "2026-04-27 13:37:27",
+    "description": "add humidity and wind speed features",
+    "val_rmse": 1.0693,
+    "runtime_sec": 0.01
+  },
+  {
+    "timestamp": "2026-04-27 13:41:13",
+    "description": "add all weather features including temp range and precipitation",
+    "val_rmse": 0.9716,
+    "runtime_sec": 0.03
+  },
+  {
+    "timestamp": "2026-04-27 13:43:37",
+    "description": "add city as factor variable to capture location effect",
+    "val_rmse": 1.0526,
+    "runtime_sec": 0.03
+  },
+  {
+    "timestamp": "2026-04-27 13:47:13",
+    "description": "add lag features - yesterday and 7-day solar output",
+    "val_rmse": 1.0276,
+    "runtime_sec": 0.03
   }
 ]
