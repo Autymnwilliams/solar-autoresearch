@@ -11,19 +11,14 @@
 # =============================================================================
 
 train_model <- function(train, val) {
-
-  # --- Define features and target ---
   TARGET   <- "ALLSKY_SFC_SW_DWN"
-  FEATURES <- c("doy_sin", "doy_cos", "T2M", "T2M_MAX", "T2M_MIN", "RH2M", "WS2M", "PRECTOTCORR", "temp_range")
-
-  # --- Build formula ---
+  FEATURES <- c("doy_sin", "doy_cos", "T2M", "RH2M", "WS2M", "city")
+  
+  train$city <- as.factor(train$city)
+  val$city   <- as.factor(val$city)
+  
   formula <- as.formula(paste(TARGET, "~", paste(FEATURES, collapse = " + ")))
-
-  # --- Fit model ---
-  model <- lm(formula, data = train)
-
-  # --- Predict on validation set ---
-  preds <- predict(model, newdata = val)
-
+  model   <- lm(formula, data = train)
+  preds   <- predict(model, newdata = val)
   return(preds)
 }
