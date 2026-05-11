@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Week 4 Deliverables — Solar AutoResearch</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --bg: #0d0f0e;
+    --bg2: #131614;
+    --bg3: #191c1a;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #e8ede9;
+    --text2: #8a9a8c;
+    --text3: #556357;
+    --green: #4ade80;
+    --green-dim: #1a3d26;
+    --green-mid: #22c55e;
+    --amber: #fbbf24;
+    --amber-dim: #3a2d0a;
+    --red: #f87171;
+    --red-dim: #3a1212;
+    --blue: #60a5fa;
+    --blue-dim: #1a2a40;
+    --accent: #4ade80;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  .page {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 3rem 2rem 6rem;
+  }
+
+  /* Header */
+  .header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 2rem;
+    margin-bottom: 3rem;
+  }
+  .header-eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    margin-bottom: .75rem;
+  }
+  .header h1 {
+    font-size: 28px;
+    font-weight: 300;
+    color: var(--text);
+    letter-spacing: -.01em;
+    margin-bottom: .5rem;
+  }
+  .header h1 span { color: var(--accent); font-weight: 500; }
+  .header-meta {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text3);
+    display: flex;
+    gap: 2rem;
+    margin-top: 1rem;
+  }
+
+  /* Section */
+  .section { margin-bottom: 3rem; }
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+  .section-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    background: var(--green-dim);
+    padding: 2px 8px;
+    border-radius: 3px;
+    letter-spacing: .05em;
+  }
+  .section-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+
+  /* Metric row */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 3rem;
+  }
+  .metric {
+    background: var(--bg2);
+    padding: 1.25rem 1.5rem;
+  }
+  .metric-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    margin-bottom: .5rem;
+  }
+  .metric-val {
+    font-family: var(--mono);
+    font-size: 26px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .metric-val.green { color: var(--green); }
+  .metric-val.amber { color: var(--amber); }
+  .metric-sub {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    margin-top: 4px;
+  }
+
+  /* Table */
+  .table-wrap {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead { background: var(--bg3); }
+  th {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    font-weight: 400;
+  }
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text);
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr.best td { background: rgba(74,222,128,0.04); }
+  tr.reverted td { opacity: .7; }
+
+  .badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    letter-spacing: .04em;
+    white-space: nowrap;
+  }
+  .b-kept   { background: var(--green-dim); color: var(--green-mid); }
+  .b-rev    { background: var(--red-dim);   color: var(--red); }
+  .b-best   { background: rgba(74,222,128,.15); color: var(--green); border: 1px solid rgba(74,222,128,.3); }
+  .b-lm     { background: var(--blue-dim);  color: var(--blue); }
+  .b-rf     { background: var(--green-dim); color: var(--green); }
+
+  .rmse-val { font-family: var(--mono); font-size: 13px; }
+  .rmse-best { color: var(--green); font-weight: 500; }
+
+  /* Chart */
+  .chart-wrap {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem;
+  }
+  .chart-legend {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text2);
+  }
+  .legend-dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-right: 5px;
+    vertical-align: middle;
+  }
+
+  /* Error grid */
+  .err-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .err-card {
+    background: var(--bg2);
+    padding: 1.25rem 1.5rem;
+  }
+  .err-card.dominant { background: rgba(248,113,113,.03); }
+  .err-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    margin-bottom: .5rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .err-tag .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .dot-red   { background: var(--red); }
+  .dot-green { background: var(--green); }
+  .dot-gray  { background: var(--text3); }
+  .err-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: .5rem;
+  }
+  .err-body {
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.6;
+  }
+  .dom-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--red);
+    background: var(--red-dim);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+
+  /* Memo */
+  .memo {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 2rem;
+  }
+  .memo-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    margin-bottom: 1.25rem;
+    padding-bottom: .75rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .memo p {
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.8;
+    margin-bottom: 1rem;
+  }
+  .memo p:last-child { margin-bottom: 0; }
+  .memo strong { color: var(--text); font-weight: 500; }
+  .memo code {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: var(--bg3);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: var(--blue);
+  }
+  .memo .highlight {
+    border-left: 2px solid var(--accent);
+    padding-left: 1rem;
+    margin: 1.25rem 0;
+  }
+  .memo .highlight p { color: var(--text); margin: 0; }
+
+  /* Footer */
+  .footer {
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    display: flex;
+    justify-content: space-between;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-eyebrow">STAT 390 Capstone · Spring 2026</div>
+    <h1>Week 4 <span>Deliverables</span></h1>
+    <p style="color:var(--text2);font-size:13px;margin-top:.25rem">Controlled Experiments &amp; Error Taxonomy — Solar Irradiance AutoResearch</p>
+    <div class="header-meta">
+      <span>repo: Autymnwilliams/solar-autoresearch</span>
+      <span>target: ALLSKY_SFC_SW_DWN</span>
+      <span>cities: Phoenix · Chicago · Seattle</span>
+      <span>2026-05-11</span>
+    </div>
+  </div>
+
+  <!-- Metrics -->
+  <div class="metrics">
+    <div class="metric">
+      <div class="metric-label">Best val RMSE</div>
+      <div class="metric-val green">0.7366</div>
+      <div class="metric-sub">kWh/m²/day</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">vs baseline</div>
+      <div class="metric-val green">−43%</div>
+      <div class="metric-sub">from 1.2917</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Experiments</div>
+      <div class="metric-val">10</div>
+      <div class="metric-sub">total runs</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Kept / Reverted</div>
+      <div class="metric-val amber">6 / 4</div>
+      <div class="metric-sub">week 1–4 total</div>
+    </div>
+  </div>
+
+  <!-- D1 + D2: Experiment Matrix -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">D1 + D2</span>
+      <span class="section-title">Controlled Experiment Set &amp; Result Matrix</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Description</th>
+            <th>What changed</th>
+            <th>What was fixed</th>
+            <th>Model</th>
+            <th>Val RMSE</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span style="font-family:var(--mono);color:var(--text3)">01</span></td>
+            <td>Baseline: doy + temperature</td>
+            <td style="color:var(--text3)">—</td>
+            <td style="color:var(--text3)">—</td>
+            <td><span class="badge b-lm">lm</span></td>
+            <td class="rmse-val">1.2917</td>
+            <td><span class="badge b-kept">Kept</span></td>
+          </tr>
+          <tr>
+            <td><span style="font-family:var(--mono);color:var(--text3)">02</span></td>
+            <td>Add humidity + wind speed</td>
+            <td style="font-family:var(--mono);font-size:12px;color:var(--blue)">+RH2M, WS2M</td>
+            <td style="color:var(--text3);font-size:12px">lm, doy, T2M</td>
+            <td><span class="badge b-lm">lm</span></td>
+            <td class="rmse-val">1.0693</td>
+            <td><span class="badge b-kept">Kept</span></td>
+          </tr>
+          <tr>
+            <td><span style="font-family:var(--mono);color:var(--text3)">03</span></td>
+            <td>All weather features</td>
+            <td style="font-family:var(--mono);font-size:12px;color:var(--blue)">+PRECTOTCORR, temp_range, CLRSKY</td>
+            <td style="color:var(--text3);font-size:12px">lm, Exp 2 features</td>
+            <td><span class="badge b-lm">lm</span></td>
+            <td class="rmse-val">0.9716</td>
+            <td><span class="badge b-kept">Kept</span></td>
+          </tr>
+          <tr class="reverted">
+            <td><span style="font-family:var(--mono);color:var(--text3)">04</span></td>
+            <td>City as factor variable</td>
+            <td style="font-family:var(--mono);font-size:12px;color:var(--blue)">+factor(city)</td>
+            <td style="color:var(--text3);font-size:12px">lm, Exp 3 features</td>
+            <td><span class="badge b-lm">lm</span></td>
+            <td class="rmse-val">1.0526</td>
+            <td><span class="badge b-rev">Reverted</span></td>
+          </tr>
+          <tr class="reverted">
+            <td><span style="font-family:var(--mono);color:var(--text3)">05</span></td>
+            <td>Add lag features</td>
+            <td style="font-family:var(--mono);font-size:12px;color:var(--blue)">+lag-1 T2M, RH2M</td>
+            <td style="color:var(--text3);font-size:12px">lm, Exp 3 features</td>
+            <td><span class="badge b-lm">lm</span></td>
+            <td class="rmse-val">1.0276</td>
+            <td><span class="badge b-rev">Reverted</span></td>
+          </tr>
+          <tr>
+            <td><span style="font-family:var(--mono);color:var(--text3)">06</span></td>
+            <td>Cyclical doy encoding</td>
+            <td style="font-family:var(--mono);font-size:12px;color:var(--blue)">doy → sin/cos(doy)</td>
+            <td style="color:var(--text3);font-size:12px">lm, Exp 3 weather features</td>
+            <td><span class="badge b-lm">lm</span></td>
+            <td class="rmse-val">0.9716</td>
+            <td><span class="badge b-kept">Kept</span></td>
+          </tr>
+          <tr class="reverted">
+            <td><span style="font-family:var(--mono);color:var(--text3)">07</span></td>
+            <td>Add doy_sin:T2M interaction</td>
+            <td style="font-family:var(--mono);font-size:12px;color:var(--blue)">+doy_sin × T2M</td>
+            <td style="color:var(--text3);font-size:12px">lm, Exp 6 features</td>
+            <td><span class="badge b-lm">lm</span></td>
+            <td class="rmse-val">0.9730</td>
+            <td><span class="badge b-rev">Reverted</span></td>
+          </tr>
+          <tr class="reverted">
+            <td><span style="font-family:var(--mono);color:var(--text3)">08</span></td>
+            <td>Add T2M_7d_avg rolling mean</td>
+            <td style="font-family:var(--mono);font-size:12px;color:var(--blue)">+7-day rolling T2M</td>
+            <td style="color:var(--text3);font-size:12px">lm, Exp 6 features</td>
+            <td><span class="badge b-lm">lm</span></td>
+            <td class="rmse-val">0.9725</td>
+            <td><span class="badge b-rev">Reverted</span></td>
+          </tr>
+          <tr>
+            <td><span style="font-family:var(--mono);color:var(--text3)">09</span></td>
+            <td>Add city factor (Exp 6 base)</td>
+            <td style="font-family:var(--mono);font-size:12px;color:var(--blue)">+factor(city)</td>
+            <td style="color:var(--text3);font-size:12px">lm, Exp 6 features</td>
+            <td><span class="badge b-lm">lm</span></td>
+            <td class="rmse-val">0.9388</td>
+            <td><span class="badge b-kept">Kept</span></td>
+          </tr>
+          <tr class="best">
+            <td><span style="font-family:var(--mono);color:var(--accent)">10</span></td>
+            <td><strong>Switch to Random Forest</strong></td>
+            <td style="font-family:var(--mono);font-size:12px;color:var(--green)">lm → ranger RF</td>
+            <td style="color:var(--text3);font-size:12px">Exp 6 features only</td>
+            <td><span class="badge b-rf">ranger</span></td>
+            <td class="rmse-val rmse-best">0.7366</td>
+            <td><span class="badge b-best">Best ✦</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- D3: Chart -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">D3</span>
+      <span class="section-title">Metric Over Time</span>
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-legend">
+        <span><span class="legend-dot" style="background:#4ade80"></span>Kept</span>
+        <span><span class="legend-dot" style="background:#f87171"></span>Reverted</span>
+        <span><span class="legend-dot" style="background:#60a5fa"></span>RMSE trend</span>
+      </div>
+      <div style="position:relative;width:100%;height:260px;">
+        <canvas id="rmseChart" role="img" aria-label="Line chart of val RMSE across 10 experiments. RMSE declines from 1.29 to 0.74 with a sharp drop at experiment 10 when switching to Random Forest. Green dots indicate kept experiments, red dots indicate reverted.">Val RMSE: 1.29, 1.07, 0.97, 1.05, 1.03, 0.97, 0.97, 0.97, 0.94, 0.74</canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- D4: Error Taxonomy -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">D4</span>
+      <span class="section-title">Error Taxonomy</span>
+    </div>
+    <div class="err-grid">
+      <div class="err-card dominant">
+        <div class="err-tag">
+          <span class="dot dot-red"></span>
+          <span style="color:var(--red)">Signal Failure</span>
+          <span class="dom-label">dominant</span>
+        </div>
+        <div class="err-name">Model unable to extract feature signal</div>
+        <div class="err-body">Feature additions (interactions, lags, rolling means, city factor) produced near-zero RMSE change under linear regression. Manifested in Exp 4, 5, 7, 8 — all reverted. Root cause was not bad features but a model architecture too weak to capture nonlinear weather/season relationships. Confirmed by Exp 10: same features, RF model, −24% RMSE.</div>
+      </div>
+      <div class="err-card">
+        <div class="err-tag">
+          <span class="dot dot-green"></span>
+          <span style="color:var(--green)">Code Instability</span>
+        </div>
+        <div class="err-name">Crashes or broken pipeline</div>
+        <div class="err-body">No crashes observed across all 10 runs. Pipeline ran cleanly with run.R as the frozen executor. Residual risk: ranger package availability on new machines requires install check before agent runs. Added to program.md as a pre-run requirement.</div>
+      </div>
+      <div class="err-card">
+        <div class="err-tag">
+          <span class="dot dot-green"></span>
+          <span style="color:var(--green)">Evaluation Leakage</span>
+        </div>
+        <div class="err-name">Compromised metric comparability</div>
+        <div class="err-body">No leakage detected. Val set (2019–2020) was never used in training. Train/val/test split is time-based and frozen in prepare.R. Kept/reverted decisions are made automatically by run.R against the same val set each run — no manual selection bias.</div>
+      </div>
+      <div class="err-card">
+        <div class="err-tag">
+          <span class="dot dot-green"></span>
+          <span style="color:var(--green)">Agent Misbehavior</span>
+        </div>
+        <div class="err-name">Changes outside intended scope</div>
+        <div class="err-body">Codex modified only train.R across all 10 runs. Frozen files (prepare.R, run.R) were untouched. Commits confirm scope was respected: 3 kept commits in Week 4 (b12dc8d, 5553d77, 04dbbaa), 2 reverts via git checkout train.R.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- D5: Failure Analysis Memo -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">D5</span>
+      <span class="section-title">Failure Analysis Memo</span>
+    </div>
+    <div class="memo">
+      <div class="memo-title">Dominant failure mode — signal failure under linear regression</div>
+      <p>Across 10 experiments, the most persistent failure was not crashes, not evaluation leakage, and not agent misbehavior — it was the model being structurally unable to use the features being added to it. Experiments 4, 5, 7, and 8 all added reasonable, domain-motivated features and were reverted because RMSE did not improve. In each case, the explanation is the same: a linear model cannot capture the nonlinear, cross-city, and temporally-structured relationships in daily solar irradiance data.</p>
+
+      <div class="highlight">
+        <p><strong>Key evidence:</strong> Experiment 10 held all features constant (Exp 6 set) and changed only the model family from <code>lm</code> to <code>ranger</code> Random Forest. Val RMSE dropped from 0.9716 to 0.7366 — a 24% single-step improvement. This is the largest gain in the entire experiment log, produced by the cleanest controlled change: one variable, one outcome, one causal account. Exp 10 is the most trusted result in the project.</p>
+      </div>
+
+      <p><strong>What this implies about reverted experiments:</strong> Features that failed under linear regression — city factor (Exp 4), lag variables (Exp 5), interaction terms (Exp 7), rolling means (Exp 8) — should not be considered bad features. The signal was always there. The linear model lacked the capacity to extract it. Now that Random Forest is the baseline model, each of those features deserves a controlled retest.</p>
+
+      <p><strong>Proposed next steps:</strong></p>
+      <p>1. Rerun Exp 4 (city factor) on top of the Exp 10 RF baseline as a controlled one-variable addition — this is the highest-priority retest given that city encodes climate regime, which RF should exploit heavily.</p>
+      <p>2. Rerun Exp 5 (lag features) on the RF baseline. Temporal autocorrelation in weather data is a strong signal that tree-based models can use.</p>
+      <p>3. Begin RF hyperparameter search as a second experiment axis: vary <code>mtry</code> and <code>min.node.size</code> while holding Exp 10 features fixed.</p>
+      <p>4. After feature retests, consider adding XGBoost as a model comparison to establish whether gradient boosting outperforms bagging on this dataset.</p>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>STAT 390 · Solar AutoResearch · Week 4</span>
+    <span>Best RMSE: 0.7366 · Exp 10 · ranger RF</span>
+  </div>
+
+</div>
+
+<script>
+const rmse = [1.2917,1.0693,0.9716,1.0526,1.0276,0.9716,0.9730,0.9725,0.9388,0.7366];
+const kept = [true,true,true,false,false,true,false,false,true,true];
+const labels = rmse.map((_,i) => 'Exp ' + (i+1));
+
+new Chart(document.getElementById('rmseChart'), {
+  type: 'line',
+  data: {
+    labels,
+    datasets: [{
+      label: 'Val RMSE',
+      data: rmse,
+      borderColor: '#60a5fa',
+      borderWidth: 2,
+      pointBackgroundColor: kept.map(k => k ? '#4ade80' : '#f87171'),
+      pointBorderColor:     kept.map(k => k ? '#4ade80' : '#f87171'),
+      pointRadius: 6,
+      pointHoverRadius: 8,
+      tension: 0.3,
+      fill: false
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#191c1a',
+        borderColor: 'rgba(255,255,255,0.12)',
+        borderWidth: 1,
+        titleColor: '#8a9a8c',
+        bodyColor: '#e8ede9',
+        titleFont: { family: 'IBM Plex Mono', size: 11 },
+        bodyFont:  { family: 'IBM Plex Mono', size: 12 },
+        callbacks: {
+          label: ctx => {
+            const i = ctx.dataIndex;
+            return (kept[i] ? '✓ Kept' : '✗ Reverted') + '   RMSE: ' + rmse[i].toFixed(4);
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        ticks: { color: '#556357', font: { family: 'IBM Plex Mono', size: 11 } },
+        grid:  { color: 'rgba(255,255,255,0.05)' }
+      },
+      y: {
+        min: 0.6, max: 1.4,
+        ticks: {
+          color: '#556357',
+          font: { family: 'IBM Plex Mono', size: 11 },
+          callback: v => v.toFixed(2)
+        },
+        grid: { color: 'rgba(255,255,255,0.05)' }
+      }
+    }
+  }
+});
+</script>
+</body>
+</html>
