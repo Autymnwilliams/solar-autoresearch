@@ -14,7 +14,8 @@ train_model <- function(train, val) {
   
   features <- c(
     "doy_sin", "doy_cos", "T2M", "T2M_MAX", "T2M_MIN",
-    "RH2M", "WS2M", "PRECTOTCORR", "temp_range"
+    "RH2M", "WS2M", "PRECTOTCORR", "temp_range",
+    "factor(city)"
   )
   
   formula <- as.formula(paste(TARGET, "~", paste(features, collapse = " + ")))
