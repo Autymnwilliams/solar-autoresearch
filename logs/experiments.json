@@ -28,5 +28,104 @@
     "description": "add lag features - yesterday and 7-day solar output",
     "val_rmse": 1.0276,
     "runtime_sec": 0.03
+  },
+  {
+    "timestamp": "2026-04-27 16:41:45",
+    "description": "add clearsky baseline, rolling weather averages, and interaction terms to linear model",
+    "val_rmse": 0.7745,
+    "runtime_sec": 0.01
+  },
+  {
+    "timestamp": "2026-05-11 12:33:38",
+    "description": "Exp 6: replace raw doy with cyclical doy sin cos",
+    "model_type": "lm",
+    "features": [
+      "doy_sin",
+      "doy_cos",
+      "T2M",
+      "T2M_MAX",
+      "T2M_MIN",
+      "RH2M",
+      "WS2M",
+      "PRECTOTCORR",
+      "temp_range"
+    ],
+    "val_rmse": 0.9716,
+    "kept": true,
+    "revert_reason": {},
+    "runtime_sec": 0.054
+  },
+  {
+    "timestamp": "2026-05-11 12:34:56",
+    "description": "Exp 7: add doy_sin T2M interaction",
+    "model_type": "lm",
+    "features": [
+      "doy_sin",
+      "doy_cos",
+      "T2M",
+      "T2M_MAX",
+      "T2M_MIN",
+      "RH2M",
+      "WS2M",
+      "PRECTOTCORR",
+      "temp_range",
+      "doy_sin:T2M"
+    ],
+    "val_rmse": 0.973,
+    "kept": false,
+    "revert_reason": "val_rmse 0.9730 did not improve best 0.9716",
+    "runtime_sec": 0.033
+  },
+  {
+    "timestamp": "2026-05-11 12:35:20",
+    "description": "Exp 8: add 7-day rolling mean of T2M",
+    "model_type": "lm",
+    "features": [
+      "doy_sin",
+      "doy_cos",
+      "T2M",
+      "T2M_MAX",
+      "T2M_MIN",
+      "RH2M",
+      "WS2M",
+      "PRECTOTCORR",
+      "temp_range",
+      "T2M_7d_avg"
+    ],
+    "val_rmse": 0.9725,
+    "kept": false,
+    "revert_reason": "val_rmse 0.9725 did not improve best 0.9716",
+    "runtime_sec": 0.033
+  },
+  {
+    "timestamp": "2026-05-11 12:35:40",
+    "description": "Exp 9: add city factor to Exp 6 base",
+    "model_type": "lm",
+    "features": [
+      "doy_sin",
+      "doy_cos",
+      "T2M",
+      "T2M_MAX",
+      "T2M_MIN",
+      "RH2M",
+      "WS2M",
+      "PRECTOTCORR",
+      "temp_range",
+      "factor(city)"
+    ],
+    "val_rmse": 0.9388,
+    "kept": true,
+    "revert_reason": {},
+    "runtime_sec": 0.035
+  },
+  {
+    "timestamp": "2026-05-11 12:36:50",
+    "description": "Exp 10: switch Exp 6 features to ranger random forest",
+    "model_type": "ranger",
+    "features": ["doy_sin", "doy_cos", "T2M", "T2M_MAX", "T2M_MIN", "RH2M", "WS2M", "PRECTOTCORR", "temp_range"],
+    "val_rmse": 0.7366,
+    "kept": true,
+    "revert_reason": null,
+    "runtime_sec": 3.638
   }
 ]
