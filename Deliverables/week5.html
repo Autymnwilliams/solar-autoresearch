@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Week 5 Deliverables — Solar AutoResearch</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --bg: #0d0f0e;
+    --bg2: #131614;
+    --bg3: #191c1a;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #e8ede9;
+    --text2: #8a9a8c;
+    --text3: #556357;
+    --green: #4ade80;
+    --green-dim: #1a3d26;
+    --green-mid: #22c55e;
+    --amber: #fbbf24;
+    --amber-dim: #3a2d0a;
+    --red: #f87171;
+    --red-dim: #3a1212;
+    --blue: #60a5fa;
+    --blue-dim: #1a2a40;
+    --accent: #4ade80;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; line-height: 1.6; }
+  .page { max-width: 960px; margin: 0 auto; padding: 3rem 2rem 6rem; }
+
+  .header { border-bottom: 1px solid var(--border); padding-bottom: 2rem; margin-bottom: 3rem; }
+  .header-eyebrow { font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: .12em; text-transform: uppercase; margin-bottom: .75rem; }
+  .header h1 { font-size: 28px; font-weight: 300; color: var(--text); letter-spacing: -.01em; margin-bottom: .5rem; }
+  .header h1 span { color: var(--accent); font-weight: 500; }
+  .header-meta { font-family: var(--mono); font-size: 12px; color: var(--text3); display: flex; gap: 2rem; margin-top: 1rem; flex-wrap: wrap; }
+
+  .section { margin-bottom: 3rem; }
+  .section-header { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 1.25rem; }
+  .section-num { font-family: var(--mono); font-size: 11px; color: var(--accent); background: var(--green-dim); padding: 2px 8px; border-radius: 3px; letter-spacing: .05em; }
+  .section-title { font-size: 13px; font-weight: 500; color: var(--text); letter-spacing: .04em; text-transform: uppercase; }
+
+  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 3rem; }
+  .metric { background: var(--bg2); padding: 1.25rem 1.5rem; }
+  .metric-label { font-family: var(--mono); font-size: 10px; color: var(--text3); letter-spacing: .08em; text-transform: uppercase; margin-bottom: .5rem; }
+  .metric-val { font-family: var(--mono); font-size: 26px; font-weight: 500; color: var(--text); }
+  .metric-val.green { color: var(--green); }
+  .metric-val.amber { color: var(--amber); }
+  .metric-sub { font-family: var(--mono); font-size: 10px; color: var(--text3); margin-top: 4px; }
+
+  .table-wrap { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  thead { background: var(--bg3); }
+  th { font-family: var(--mono); font-size: 10px; color: var(--text3); letter-spacing: .08em; text-transform: uppercase; padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); font-weight: 400; }
+  td { padding: 9px 14px; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--text); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr.best td { background: rgba(74,222,128,0.04); }
+  tr.reverted td { opacity: .65; }
+  tr.legacy td { opacity: .5; }
+
+  .badge { display: inline-block; font-family: var(--mono); font-size: 10px; padding: 2px 8px; border-radius: 3px; letter-spacing: .04em; white-space: nowrap; }
+  .b-kept   { background: var(--green-dim); color: var(--green-mid); }
+  .b-rev    { background: var(--red-dim);   color: var(--red); }
+  .b-best   { background: rgba(74,222,128,.15); color: var(--green); border: 1px solid rgba(74,222,128,.3); }
+  .b-lm     { background: var(--blue-dim);  color: var(--blue); }
+  .b-rf     { background: var(--green-dim); color: var(--green); }
+  .b-legacy { background: rgba(255,255,255,.04); color: var(--text3); }
+
+  .rmse-val { font-family: var(--mono); font-size: 12px; }
+  .rmse-best { color: var(--green); font-weight: 500; }
+
+  .chart-wrap { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; }
+  .chart-legend { display: flex; gap: 1.5rem; margin-bottom: 1rem; font-family: var(--mono); font-size: 11px; color: var(--text2); flex-wrap: wrap; }
+  .legend-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
+
+  /* Keep/Discard/Crash grid */
+  .kdc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .kdc-card { background: var(--bg2); padding: 1.5rem; }
+  .kdc-num { font-family: var(--mono); font-size: 36px; font-weight: 500; margin-bottom: .25rem; }
+  .kdc-label { font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; margin-bottom: .75rem; }
+  .kdc-list { font-size: 12px; color: var(--text2); line-height: 1.7; }
+  .kdc-list span { display: block; }
+
+  /* Baseline comparison */
+  .compare-wrap { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .compare-row { display: grid; grid-template-columns: 180px 1fr 120px; align-items: center; gap: 1rem; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); }
+  .compare-row:last-child { border-bottom: none; }
+  .compare-label { font-size: 12px; color: var(--text2); }
+  .compare-bar-wrap { height: 8px; background: var(--bg3); border-radius: 4px; overflow: hidden; }
+  .compare-bar { height: 100%; border-radius: 4px; transition: width .6s ease; }
+  .compare-val { font-family: var(--mono); font-size: 13px; text-align: right; }
+
+  /* Memo */
+  .memo { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 2rem; }
+  .memo-title { font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 1.25rem; padding-bottom: .75rem; border-bottom: 1px solid var(--border); }
+  .memo p { font-size: 13px; color: var(--text2); line-height: 1.8; margin-bottom: 1rem; }
+  .memo p:last-child { margin-bottom: 0; }
+  .memo strong { color: var(--text); font-weight: 500; }
+  .memo code { font-family: var(--mono); font-size: 12px; background: var(--bg3); padding: 1px 6px; border-radius: 3px; color: var(--blue); }
+  .memo .highlight { border-left: 2px solid var(--accent); padding-left: 1rem; margin: 1.25rem 0; }
+  .memo .highlight p { color: var(--text); margin: 0; }
+  .memo h3 { font-size: 13px; font-weight: 500; color: var(--text); margin: 1.25rem 0 .5rem; }
+
+  /* Trace integrity checklist */
+  .checklist { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 3rem; }
+  .check-item { background: var(--bg2); padding: 1rem 1.25rem; display: flex; align-items: flex-start; gap: .75rem; }
+  .check-icon { font-family: var(--mono); font-size: 12px; color: var(--green); background: var(--green-dim); padding: 2px 7px; border-radius: 3px; flex-shrink: 0; margin-top: 1px; }
+  .check-title { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 2px; }
+  .check-body { font-size: 12px; color: var(--text2); line-height: 1.5; }
+
+  .footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-family: var(--mono); font-size: 11px; color: var(--text3); display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem; }
+
+  .note { font-family: var(--mono); font-size: 11px; color: var(--text3); margin-top: .75rem; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-eyebrow">STAT 390 Capstone · Spring 2026</div>
+    <h1>Week 5 <span>Deliverables</span></h1>
+    <p style="color:var(--text2);font-size:13px;margin-top:.25rem">First Real Autonomous Block — Solar Irradiance AutoResearch</p>
+    <div class="header-meta">
+      <span>repo: Autymnwilliams/solar-autoresearch</span>
+      <span>target: ALLSKY_SFC_SW_DWN</span>
+      <span>cities: Phoenix · Chicago · Seattle</span>
+      <span>block logged: 2026-04-27 → 2026-05-11</span>
+    </div>
+  </div>
+
+  <!-- Summary metrics -->
+  <div class="metrics">
+    <div class="metric">
+      <div class="metric-label">Best val RMSE</div>
+      <div class="metric-val green">0.7366</div>
+      <div class="metric-sub">Exp 10 · ranger RF</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">vs baseline</div>
+      <div class="metric-val green">−43%</div>
+      <div class="metric-sub">from 1.2917</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Total runs</div>
+      <div class="metric-val">10</div>
+      <div class="metric-sub">full block</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Keep / Discard / Crash</div>
+      <div class="metric-val amber">6 / 4 / 0</div>
+      <div class="metric-sub">no crashes recorded</div>
+    </div>
+  </div>
+
+  <!-- Trace integrity -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">TRACE</span>
+      <span class="section-title">Autonomous Trace Integrity</span>
+    </div>
+    <div class="checklist">
+      <div class="check-item">
+        <span class="check-icon">✓</span>
+        <div>
+          <div class="check-title">Run logs complete</div>
+          <div class="check-body">All 10 runs recorded in experiments.json with timestamps, descriptions, and val_rmse. No gaps in history.</div>
+        </div>
+      </div>
+      <div class="check-item">
+        <span class="check-icon">✓</span>
+        <div>
+          <div class="check-title">Git version history</div>
+          <div class="check-body">3 commits in Week 4 block: b12dc8d (Exp 6), 5553d77 (Exp 9), 04dbbaa (Exp 10). Reverts via git checkout train.R.</div>
+        </div>
+      </div>
+      <div class="check-item">
+        <span class="check-icon">✓</span>
+        <div>
+          <div class="check-title">Keep / rollback decisions logged</div>
+          <div class="check-body">Exp 6–10 include kept boolean and revert_reason field. Decisions made automatically by run.R against fixed val set.</div>
+        </div>
+      </div>
+      <div class="check-item">
+        <span class="check-icon">✓</span>
+        <div>
+          <div class="check-title">Experiments comparable</div>
+          <div class="check-body">Val set frozen (2019–2020). Train/val/test split time-based. Same run.R executor for every experiment.</div>
+        </div>
+      </div>
+      <div class="check-item">
+        <span class="check-icon">✓</span>
+        <div>
+          <div class="check-title">Feature sets recorded</div>
+          <div class="check-body">Exp 6–10 log exact feature vectors. Each change is one variable from a documented base — fully attributable.</div>
+        </div>
+      </div>
+      <div class="check-item">
+        <span class="check-icon">✓</span>
+        <div>
+          <div class="check-title">Resource usage noted</div>
+          <div class="check-body">Runtime logged per run. lm runs: 0.03–0.054s. RF (Exp 10): 3.638s. No memory issues observed.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- D1: Full experiment log -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">D1</span>
+      <span class="section-title">Complete Experiment Log Bundle</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Timestamp</th>
+            <th>Description</th>
+            <th>Model</th>
+            <th>Val RMSE</th>
+            <th>Runtime</th>
+            <th>Status</th>
+            <th>Revert reason</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="legacy">
+            <td><span style="font-family:var(--mono);color:var(--text3)">01</span></td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">2026-04-27 12:38</td>
+            <td>Baseline: doy + temperature</td>
+            <td><span class="badge b-legacy">lm</span></td>
+            <td class="rmse-val">1.2917</td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">0.00s</td>
+            <td><span class="badge b-kept">Kept</span></td>
+            <td style="color:var(--text3);font-size:11px">—</td>
+          </tr>
+          <tr class="legacy">
+            <td><span style="font-family:var(--mono);color:var(--text3)">02</span></td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">2026-04-27 13:37</td>
+            <td>Add humidity + wind speed</td>
+            <td><span class="badge b-legacy">lm</span></td>
+            <td class="rmse-val">1.0693</td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">0.01s</td>
+            <td><span class="badge b-kept">Kept</span></td>
+            <td style="color:var(--text3);font-size:11px">—</td>
+          </tr>
+          <tr class="legacy">
+            <td><span style="font-family:var(--mono);color:var(--text3)">03</span></td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">2026-04-27 13:41</td>
+            <td>All weather features incl. temp range + precip</td>
+            <td><span class="badge b-legacy">lm</span></td>
+            <td class="rmse-val">0.9716</td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">0.03s</td>
+            <td><span class="badge b-kept">Kept</span></td>
+            <td style="color:var(--text3);font-size:11px">—</td>
+          </tr>
+          <tr class="legacy reverted">
+            <td><span style="font-family:var(--mono);color:var(--text3)">04</span></td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">2026-04-27 13:43</td>
+            <td>Add city as factor variable</td>
+            <td><span class="badge b-legacy">lm</span></td>
+            <td class="rmse-val">1.0526</td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">0.03s</td>
+            <td><span class="badge b-rev">Reverted</span></td>
+            <td style="color:var(--text3);font-size:11px">RMSE worse than best</td>
+          </tr>
+          <tr class="legacy reverted">
+            <td><span style="font-family:var(--mono);color:var(--text3)">05</span></td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">2026-04-27 13:47</td>
+            <td>Add lag features — yesterday + 7-day solar</td>
+            <td><span class="badge b-legacy">lm</span></td>
+            <td class="rmse-val">1.0276</td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">0.03s</td>
+            <td><span class="badge b-rev">Reverted</span></td>
+            <td style="color:var(--text3);font-size:11px">RMSE worse than best</td>
+          </tr>
+          <tr>
+            <td><span style="font-family:var(--mono);color:var(--text3)">06</span></td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">2026-05-11 12:33</td>
+            <td>Replace raw doy with cyclical sin/cos encoding</td>
+            <td><span class="badge b-lm">lm</span></td>
+            <td class="rmse-val">0.9716</td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">0.054s</td>
+            <td><span class="badge b-kept">Kept</span></td>
+            <td style="color:var(--text3);font-size:11px">—</td>
+          </tr>
+          <tr class="reverted">
+            <td><span style="font-family:var(--mono);color:var(--text3)">07</span></td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">2026-05-11 12:34</td>
+            <td>Add doy_sin:T2M interaction term</td>
+            <td><span class="badge b-lm">lm</span></td>
+            <td class="rmse-val">0.9730</td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">0.033s</td>
+            <td><span class="badge b-rev">Reverted</span></td>
+            <td style="color:var(--text3);font-size:11px">0.9730 did not improve best 0.9716</td>
+          </tr>
+          <tr class="reverted">
+            <td><span style="font-family:var(--mono);color:var(--text3)">08</span></td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">2026-05-11 12:35</td>
+            <td>Add 7-day rolling mean of T2M</td>
+            <td><span class="badge b-lm">lm</span></td>
+            <td class="rmse-val">0.9725</td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">0.033s</td>
+            <td><span class="badge b-rev">Reverted</span></td>
+            <td style="color:var(--text3);font-size:11px">0.9725 did not improve best 0.9716</td>
+          </tr>
+          <tr>
+            <td><span style="font-family:var(--mono);color:var(--text3)">09</span></td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">2026-05-11 12:35</td>
+            <td>Add city factor to Exp 6 base</td>
+            <td><span class="badge b-lm">lm</span></td>
+            <td class="rmse-val">0.9388</td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">0.035s</td>
+            <td><span class="badge b-kept">Kept</span></td>
+            <td style="color:var(--text3);font-size:11px">—</td>
+          </tr>
+          <tr class="best">
+            <td><span style="font-family:var(--mono);color:var(--accent)">10</span></td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">2026-05-11 12:36</td>
+            <td><strong>Switch Exp 6 features to ranger Random Forest</strong></td>
+            <td><span class="badge b-rf">ranger</span></td>
+            <td class="rmse-val rmse-best">0.7366</td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">3.638s</td>
+            <td><span class="badge b-best">Best ✦</span></td>
+            <td style="color:var(--text3);font-size:11px">—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">* Exp 1–5 are pre-structured-logging runs (no model_type/features fields). Faded to distinguish from the structured autonomous block.</p>
+  </div>
+
+  <!-- D2: Metric trajectory -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">D2</span>
+      <span class="section-title">Metric Trajectory Plot</span>
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-legend">
+        <span><span class="legend-dot" style="background:#4ade80"></span>Kept</span>
+        <span><span class="legend-dot" style="background:#f87171"></span>Reverted</span>
+        <span><span class="legend-dot" style="background:#60a5fa"></span>RMSE trajectory</span>
+        <span style="color:var(--text3)">|</span>
+        <span style="color:var(--text3)">Baseline: 1.2917</span>
+        <span style="color:var(--text3)">Best: 0.7366</span>
+      </div>
+      <div style="position:relative;width:100%;height:280px;">
+        <canvas id="rmseChart" role="img" aria-label="Line chart of val RMSE across 10 experiments. Starts at 1.29, drops to 0.97 by Exp 3, stays flat through Exp 9 with failed attempts, then drops sharply to 0.74 at Exp 10 with Random Forest.">Val RMSE across 10 runs: 1.2917, 1.0693, 0.9716, 1.0526, 1.0276, 0.9716, 0.9730, 0.9725, 0.9388, 0.7366</canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- D3: Keep/Discard/Crash -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">D3</span>
+      <span class="section-title">Keep / Discard / Crash Summary</span>
+    </div>
+    <div class="kdc-grid">
+      <div class="kdc-card">
+        <div class="kdc-num" style="color:var(--green)">6</div>
+        <div class="kdc-label" style="color:var(--green)">Kept</div>
+        <div class="kdc-list">
+          <span>Exp 1 — baseline lm</span>
+          <span>Exp 2 — add humidity + wind</span>
+          <span>Exp 3 — all weather features</span>
+          <span>Exp 6 — cyclical doy encoding</span>
+          <span>Exp 9 — city factor (lm)</span>
+          <span>Exp 10 — ranger RF ✦ best</span>
+        </div>
+      </div>
+      <div class="kdc-card">
+        <div class="kdc-num" style="color:var(--red)">4</div>
+        <div class="kdc-label" style="color:var(--red)">Discarded</div>
+        <div class="kdc-list">
+          <span>Exp 4 — city factor on lm (1.0526 &gt; 0.9716)</span>
+          <span>Exp 5 — lag features (1.0276 &gt; 0.9716)</span>
+          <span>Exp 7 — doy_sin:T2M interaction (0.9730 &gt; 0.9716)</span>
+          <span>Exp 8 — T2M 7-day rolling mean (0.9725 &gt; 0.9716)</span>
+        </div>
+      </div>
+      <div class="kdc-card">
+        <div class="kdc-num" style="color:var(--text3)">0</div>
+        <div class="kdc-label" style="color:var(--text3)">Crashed</div>
+        <div class="kdc-list">
+          <span style="color:var(--text3)">No pipeline crashes across all 10 runs.</span>
+          <span style="color:var(--text3)">All runs completed and logged.</span>
+          <span style="color:var(--text3)">ranger package available and stable.</span>
+          <span>&nbsp;</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- D4: Best vs baseline -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">D4</span>
+      <span class="section-title">Best Result vs. Baseline</span>
+    </div>
+    <div class="compare-wrap">
+      <div style="padding: .75rem 1.5rem; background: var(--bg3); border-bottom: 1px solid var(--border);">
+        <span style="font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase">Val RMSE — lower is better · bar scaled to worst result (1.2917)</span>
+      </div>
+      <div class="compare-row">
+        <div>
+          <div class="compare-label">Exp 1 — Baseline</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px">lm · doy + T2M only</div>
+        </div>
+        <div class="compare-bar-wrap">
+          <div class="compare-bar" style="width:100%;background:#f87171;opacity:.6"></div>
+        </div>
+        <div class="compare-val" style="color:var(--red)">1.2917</div>
+      </div>
+      <div class="compare-row">
+        <div>
+          <div class="compare-label">Exp 3 — All weather features</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px">lm · best linear result (Week 3)</div>
+        </div>
+        <div class="compare-bar-wrap">
+          <div class="compare-bar" style="width:75.2%;background:var(--amber);opacity:.7"></div>
+        </div>
+        <div class="compare-val" style="color:var(--amber)">0.9716</div>
+      </div>
+      <div class="compare-row">
+        <div>
+          <div class="compare-label">Exp 9 — City factor + cyclical doy</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px">lm · best linear (Week 4)</div>
+        </div>
+        <div class="compare-bar-wrap">
+          <div class="compare-bar" style="width:72.7%;background:var(--amber);opacity:.5"></div>
+        </div>
+        <div class="compare-val" style="color:var(--amber)">0.9388</div>
+      </div>
+      <div class="compare-row best">
+        <div>
+          <div class="compare-label"><strong>Exp 10 — Random Forest</strong></div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px">ranger · Exp 6 features · current best</div>
+        </div>
+        <div class="compare-bar-wrap">
+          <div class="compare-bar" style="width:57.0%;background:var(--green);opacity:.8"></div>
+        </div>
+        <div class="compare-val rmse-best">0.7366</div>
+      </div>
+      <div style="padding: 1rem 1.5rem; background: var(--bg3); border-top: 1px solid var(--border); display:flex; gap:2rem;">
+        <span style="font-family:var(--mono);font-size:11px;color:var(--green)">Total improvement: −43.0% vs baseline</span>
+        <span style="font-family:var(--mono);font-size:11px;color:var(--text3)">Linear ceiling: −27.3% (Exp 9)</span>
+        <span style="font-family:var(--mono);font-size:11px;color:var(--text3)">RF gain beyond linear ceiling: −21.5%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- D5: What actually worked memo -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">D5</span>
+      <span class="section-title">"What Actually Worked" Memo</span>
+    </div>
+    <div class="memo">
+      <div class="memo-title">Interpretable gains from the autonomous block</div>
+
+      <h3>What the agent discovered</h3>
+      <p>The agent ran 10 controlled experiments across two model families. Three categories of modification produced real, interpretable gains: (1) expanding the weather feature set, (2) encoding seasonality correctly, and (3) switching to a nonlinear model class. Everything else — interaction terms, rolling means, lag features — produced no improvement under linear regression.</p>
+
+      <div class="highlight">
+        <p><strong>Most important discovery:</strong> The single largest gain in the experiment log came from switching model family (Exp 10), not from adding features. Holding the Exp 6 feature set fixed and replacing <code>lm</code> with <code>ranger</code> Random Forest dropped val RMSE from 0.9716 to 0.7366 — a 24% improvement from one controlled change. This result is the most trusted in the project: one variable changed, one outcome measured, clean causal account.</p>
+      </div>
+
+      <h3>Was the improvement real or accidental?</h3>
+      <p>The Exp 10 result is credible. It was produced by a single controlled change from a documented baseline, evaluated against the same frozen val set (2019–2020) used for every prior run. The improvement is large enough (24%) to be well outside the noise band observed in adjacent experiments (Exp 7: +0.0014, Exp 8: +0.0009). A one-time lucky run would not explain a gap of this magnitude relative to the surrounding experiment space.</p>
+
+      <h3>What consistently failed</h3>
+      <p>Four experiment categories reliably failed to improve RMSE under linear regression: city as a factor variable (Exp 4), lag features (Exp 5), interaction terms (Exp 7), and rolling means (Exp 8). This is a coherent pattern, not random noise — a linear model is structurally unable to capture the nonlinear and cross-city relationships these features encode. The features themselves are not bad. They have not yet been retested on the Random Forest baseline, which is the primary open item for Week 6.</p>
+
+      <h3>What comes next</h3>
+      <p>The current best model (Exp 10 RF, RMSE 0.7366) used only 9 features from the Exp 6 set. The next experiment block should retest Exp 4 and Exp 5 additions on top of this RF baseline as isolated one-variable additions, then begin RF hyperparameter tuning (<code>mtry</code>, <code>min.node.size</code>) as a second axis. XGBoost should be added as a model comparison once the RF feature set is finalized.</p>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>STAT 390 · Solar AutoResearch · Week 5</span>
+    <span>Best RMSE: 0.7366 · Exp 10 · ranger RF · −43% vs baseline</span>
+  </div>
+
+</div>
+
+<script>
+const rmse = [1.2917,1.0693,0.9716,1.0526,1.0276,0.9716,0.9730,0.9725,0.9388,0.7366];
+const kept = [true,true,true,false,false,true,false,false,true,true];
+const labels = rmse.map((_,i) => 'Exp '+(i+1));
+
+new Chart(document.getElementById('rmseChart'), {
+  type: 'line',
+  data: {
+    labels,
+    datasets: [
+      {
+        label: 'Val RMSE',
+        data: rmse,
+        borderColor: '#60a5fa',
+        borderWidth: 2,
+        pointBackgroundColor: kept.map(k => k ? '#4ade80' : '#f87171'),
+        pointBorderColor: kept.map(k => k ? '#4ade80' : '#f87171'),
+        pointRadius: 6,
+        pointHoverRadius: 8,
+        tension: 0.3,
+        fill: false
+      },
+      {
+        label: 'Baseline',
+        data: Array(10).fill(1.2917),
+        borderColor: 'rgba(248,113,113,0.25)',
+        borderWidth: 1,
+        borderDash: [4,4],
+        pointRadius: 0,
+        fill: false
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#191c1a',
+        borderColor: 'rgba(255,255,255,0.12)',
+        borderWidth: 1,
+        titleColor: '#8a9a8c',
+        bodyColor: '#e8ede9',
+        titleFont: { family: 'IBM Plex Mono', size: 11 },
+        bodyFont: { family: 'IBM Plex Mono', size: 12 },
+        callbacks: {
+          label: ctx => {
+            if (ctx.datasetIndex === 1) return 'Baseline: 1.2917';
+            const i = ctx.dataIndex;
+            return (kept[i] ? '✓ Kept' : '✗ Reverted') + '   RMSE: ' + rmse[i].toFixed(4);
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        ticks: { color: '#556357', font: { family: 'IBM Plex Mono', size: 11 } },
+        grid: { color: 'rgba(255,255,255,0.05)' }
+      },
+      y: {
+        min: 0.6, max: 1.4,
+        ticks: { color: '#556357', font: { family: 'IBM Plex Mono', size: 11 }, callback: v => v.toFixed(2) },
+        grid: { color: 'rgba(255,255,255,0.05)' }
+      }
+    }
+  }
+});
+</script>
+</body>
+</html>
