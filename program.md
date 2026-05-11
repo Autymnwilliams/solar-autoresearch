@@ -40,6 +40,19 @@ Minimize **validation RMSE** on the daily solar irradiance (GHI) prediction task
 * City as a factor variable to capture location-specific effects
 * Hyperparameter tuning within the pipeline
 
+## Logging Rules
+- Every experiment must be logged, whether val_rmse improved or not
+- A run that is reverted must still appear in experiments.json with "kept": false
+- Required fields for every log entry:
+    - timestamp
+    - description
+    - model_type (e.g. "lm", "ranger", "xgboost")
+    - features (list of feature names used)
+    - val_rmse
+    - kept (true/false)
+    - revert_reason (if kept: false, explain why)
+    - runtime_sec
+    
 ## What NOT to Do
 
 * Do not modify `prepare.R` or `evaluate.R` (data split, metric)
