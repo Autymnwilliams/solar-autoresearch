@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Week 6 Deliverables — Solar AutoResearch</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f0e;
+    --bg2: #131614;
+    --bg3: #191c1a;
+    --border: rgba(255,255,255,0.08);
+    --text: #e8ede9;
+    --text2: #8a9a8c;
+    --text3: #556357;
+    --green: #4ade80;
+    --green-dim: #1a3d26;
+    --green-mid: #22c55e;
+    --amber: #fbbf24;
+    --amber-dim: #3a2d0a;
+    --red: #f87171;
+    --red-dim: #3a1212;
+    --blue: #60a5fa;
+    --blue-dim: #1a2a40;
+    --accent: #4ade80;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; line-height: 1.6; }
+  .page { max-width: 960px; margin: 0 auto; padding: 3rem 2rem 6rem; }
+
+  .header { border-bottom: 1px solid var(--border); padding-bottom: 2rem; margin-bottom: 3rem; }
+  .header-eyebrow { font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: .12em; text-transform: uppercase; margin-bottom: .75rem; }
+  .header h1 { font-size: 28px; font-weight: 300; color: var(--text); letter-spacing: -.01em; margin-bottom: .5rem; }
+  .header h1 span { color: var(--accent); font-weight: 500; }
+  .header-meta { font-family: var(--mono); font-size: 12px; color: var(--text3); display: flex; gap: 2rem; margin-top: 1rem; flex-wrap: wrap; }
+
+  .section { margin-bottom: 3rem; }
+  .section-header { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 1.25rem; }
+  .section-num { font-family: var(--mono); font-size: 11px; color: var(--accent); background: var(--green-dim); padding: 2px 8px; border-radius: 3px; letter-spacing: .05em; }
+  .section-title { font-size: 13px; font-weight: 500; color: var(--text); letter-spacing: .04em; text-transform: uppercase; }
+
+  /* Story lock card */
+  .story-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .story-card .story-header { background: rgba(74,222,128,0.06); border-bottom: 1px solid var(--border); padding: 1rem 1.5rem; }
+  .story-label { font-family: var(--mono); font-size: 10px; color: var(--accent); letter-spacing: .1em; text-transform: uppercase; margin-bottom: .25rem; }
+  .story-sentence { font-size: 15px; font-weight: 400; color: var(--text); line-height: 1.6; }
+  .story-body { padding: 1.25rem 1.5rem; }
+  .story-body p { font-size: 13px; color: var(--text2); line-height: 1.8; margin-bottom: .75rem; }
+  .story-body p:last-child { margin-bottom: 0; }
+  .story-body strong { color: var(--text); font-weight: 500; }
+  .story-body code { font-family: var(--mono); font-size: 12px; background: var(--bg3); padding: 1px 6px; border-radius: 3px; color: var(--blue); }
+
+  /* Ablation table */
+  .table-wrap { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  thead { background: var(--bg3); }
+  th { font-family: var(--mono); font-size: 10px; color: var(--text3); letter-spacing: .08em; text-transform: uppercase; padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); font-weight: 400; }
+  td { padding: 9px 14px; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--text); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr.best td { background: rgba(74,222,128,0.04); }
+  tr.dropped td { opacity: .55; }
+
+  .badge { display: inline-block; font-family: var(--mono); font-size: 10px; padding: 2px 8px; border-radius: 3px; letter-spacing: .04em; white-space: nowrap; }
+  .b-kept   { background: var(--green-dim); color: var(--green-mid); }
+  .b-drop   { background: var(--red-dim);   color: var(--red); }
+  .b-best   { background: rgba(74,222,128,.15); color: var(--green); border: 1px solid rgba(74,222,128,.3); }
+  .b-todo   { background: var(--amber-dim); color: var(--amber); }
+  .b-lm     { background: var(--blue-dim);  color: var(--blue); }
+  .b-rf     { background: var(--green-dim); color: var(--green); }
+  .rmse-val { font-family: var(--mono); font-size: 12px; }
+  .rmse-best { color: var(--green); font-weight: 500; }
+
+  /* Dropped directions */
+  .drop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .drop-card { background: var(--bg2); padding: 1.25rem 1.5rem; }
+  .drop-tag { font-family: var(--mono); font-size: 10px; color: var(--red); letter-spacing: .08em; text-transform: uppercase; margin-bottom: .5rem; display: flex; align-items: center; gap: 6px; }
+  .drop-name { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: .4rem; }
+  .drop-reason { font-size: 12px; color: var(--text2); line-height: 1.5; }
+
+  /* Two-week plan */
+  .plan-wrap { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .plan-week { border-bottom: 1px solid var(--border); }
+  .plan-week:last-child { border-bottom: none; }
+  .plan-week-header { background: var(--bg3); padding: .75rem 1.5rem; display: flex; align-items: center; gap: 1rem; }
+  .plan-week-label { font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: .08em; text-transform: uppercase; }
+  .plan-week-title { font-size: 13px; font-weight: 500; color: var(--text); }
+  .plan-tasks { padding: .75rem 0; }
+  .plan-task { display: grid; grid-template-columns: 40px 1fr 120px; align-items: start; gap: .75rem; padding: .625rem 1.5rem; border-bottom: 1px solid var(--border); }
+  .plan-task:last-child { border-bottom: none; }
+  .task-num { font-family: var(--mono); font-size: 11px; color: var(--text3); padding-top: 1px; }
+  .task-body { font-size: 13px; color: var(--text); }
+  .task-body .task-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .task-status { text-align: right; }
+
+  /* Program md block */
+  .code-block { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; font-family: var(--mono); font-size: 12px; color: var(--text2); line-height: 1.8; overflow-x: auto; }
+  .code-block .c-comment { color: var(--text3); }
+  .code-block .c-key { color: var(--accent); }
+  .code-block .c-val { color: var(--blue); }
+  .code-block .c-drop { color: var(--red); }
+  .code-block .c-keep { color: var(--green); }
+
+
+
+  .footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-family: var(--mono); font-size: 11px; color: var(--text3); display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem; }
+
+  .lock-banner { background: rgba(74,222,128,0.05); border: 1px solid rgba(74,222,128,0.2); border-radius: 8px; padding: 1rem 1.5rem; margin-bottom: 3rem; display: flex; align-items: center; gap: 1rem; }
+  .lock-icon { font-family: var(--mono); font-size: 11px; color: var(--accent); background: var(--green-dim); padding: 3px 10px; border-radius: 3px; white-space: nowrap; }
+  .lock-text { font-size: 13px; color: var(--text2); line-height: 1.5; }
+  .lock-text strong { color: var(--text); }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-eyebrow">STAT 390 Capstone · Spring 2026</div>
+    <h1>Week 6 <span>Deliverables</span></h1>
+    <p style="color:var(--text2);font-size:13px;margin-top:.25rem">Iteration, Ablation, and Scope Lock — Solar Irradiance AutoResearch</p>
+    <div class="header-meta">
+      <span>repo: Autymnwilliams/solar-autoresearch</span>
+      <span>locked: 2026-05-18</span>
+      <span>final due: 2 weeks</span>
+      <span>status: SCOPE LOCKED</span>
+    </div>
+  </div>
+
+  <!-- Lock banner -->
+  <div class="lock-banner">
+    <span class="lock-icon">LOCKED</span>
+    <span class="lock-text"><strong>Scope is locked as of Week 6.</strong> No new model families. No new feature axes. No evaluation changes. The remaining two weeks are exclusively: retest city + lag features on RF baseline, evaluate on test set, build final presentation.</span>
+  </div>
+
+  <!-- D1: Revised project statement -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">D1</span>
+      <span class="section-title">Revised Project Statement</span>
+    </div>
+    <div class="story-card">
+      <div class="story-header">
+        <div class="story-label">Locked contribution — one sentence</div>
+        <div class="story-sentence">An AI agent autonomously discovered that switching from linear regression to Random Forest — not feature engineering — was the dominant driver of prediction accuracy for daily solar irradiance across three climatically diverse US cities, reducing validation RMSE by 43% from baseline.</div>
+      </div>
+      <div class="story-body">
+        <p><strong>What the project is:</strong> A Karpathy-style AutoResearch loop in R where a Codex agent iterates on <code>train.R</code>, runs experiments via a frozen <code>run.R</code> executor, and logs every result to <code>experiments.json</code>. The agent may only modify the model file; evaluation, data, and logging are frozen to ensure comparability.</p>
+        <p><strong>What the agent discovered:</strong> Across 10 controlled experiments, feature additions under linear regression produced marginal or negative gains. Switching to Random Forest with the same feature set produced the largest single-step improvement in the log (−24% in one run). The agent identified this through a controlled experiment, not random search.</p>
+        <p><strong>Why it matters:</strong> The project demonstrates that an autonomous agent can produce interpretable, reproducible research findings — not just score improvements — when given a disciplined experimental framework with frozen evaluation and mandatory logging.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- D2: Updated program.md strategy -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">D2</span>
+      <span class="section-title">Updated Agent Strategy (program.md reflection)</span>
+    </div>
+    <div class="code-block">
+<span class="c-comment"># program.md — Week 6 Update (scope locked)</span>
+<br><br>
+<span class="c-comment">## Current Best</span><br>
+<span class="c-key">model:</span> <span class="c-val">ranger Random Forest</span><br>
+<span class="c-key">features:</span> <span class="c-val">doy_sin, doy_cos, T2M, T2M_MAX, T2M_MIN, RH2M, WS2M, PRECTOTCORR, temp_range</span><br>
+<span class="c-key">val_rmse:</span> <span class="c-val">0.7366</span> (Exp 10)<br>
+<br>
+<span class="c-comment">## Permitted Experiments (final 2 weeks only)</span><br>
+<span class="c-keep">✓ Retest factor(city) on RF baseline — Exp 11</span><br>
+<span class="c-keep">✓ Retest lag features on RF baseline — Exp 12</span><br>
+<span class="c-keep">✓ RF hyperparameter tuning (mtry, min.node.size) — if time permits</span><br>
+<span class="c-keep">✓ Final test set evaluation (2021–2023) — ONCE, after best model confirmed</span><br>
+<br>
+<span class="c-comment">## Officially Dropped — do not revisit</span><br>
+<span class="c-drop">✗ XGBoost — not started, no time, scope expansion</span><br>
+<span class="c-drop">✗ Interaction terms under lm — failed Exp 7, not worth retesting on lm</span><br>
+<span class="c-drop">✗ Rolling means under lm — failed Exp 8, same reason</span><br>
+<span class="c-drop">✗ Lag features under lm — failed Exp 5, already reverted</span><br>
+<span class="c-drop">✗ Any new feature axes not already in the experiment log</span><br>
+<br>
+<span class="c-comment">## Frozen Rules (unchanged)</span><br>
+<span class="c-key">editable:</span> <span class="c-val">train.R only</span><br>
+<span class="c-key">frozen:</span> <span class="c-val">prepare.R, run.R</span><br>
+<span class="c-key">metric:</span> <span class="c-val">val_rmse (lower is better)</span><br>
+<span class="c-key">log:</span> <span class="c-val">every run logged regardless of outcome</span><br>
+<span class="c-key">test set:</span> <span class="c-val">LOCKED — do not touch until final evaluation</span>
+    </div>
+  </div>
+
+  <!-- D3: Ablation / comparison table -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">D3</span>
+      <span class="section-title">Ablation &amp; Comparison Table</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>What was tested</th>
+            <th>Model</th>
+            <th>Change from base</th>
+            <th>Val RMSE</th>
+            <th>Δ RMSE</th>
+            <th>Decision</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="font-family:var(--mono);color:var(--text3)">01</td>
+            <td>Baseline: doy + T2M only</td>
+            <td><span class="badge b-lm">lm</span></td>
+            <td style="color:var(--text3)">—</td>
+            <td class="rmse-val">1.2917</td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">—</td>
+            <td><span class="badge b-kept">Kept</span></td>
+          </tr>
+          <tr>
+            <td style="font-family:var(--mono);color:var(--text3)">02</td>
+            <td>+ humidity + wind speed</td>
+            <td><span class="badge b-lm">lm</span></td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--blue)">+RH2M, WS2M</td>
+            <td class="rmse-val">1.0693</td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--green)">−0.2224</td>
+            <td><span class="badge b-kept">Kept</span></td>
+          </tr>
+          <tr>
+            <td style="font-family:var(--mono);color:var(--text3)">03</td>
+            <td>+ all weather features</td>
+            <td><span class="badge b-lm">lm</span></td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--blue)">+PRECTOTCORR, temp_range, CLRSKY</td>
+            <td class="rmse-val">0.9716</td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--green)">−0.0977</td>
+            <td><span class="badge b-kept">Kept</span></td>
+          </tr>
+          <tr class="dropped">
+            <td style="font-family:var(--mono);color:var(--text3)">04</td>
+            <td>+ city factor (lm)</td>
+            <td><span class="badge b-lm">lm</span></td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--blue)">+factor(city)</td>
+            <td class="rmse-val">1.0526</td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--red)">+0.0810</td>
+            <td><span class="badge b-drop">Dropped</span></td>
+          </tr>
+          <tr class="dropped">
+            <td style="font-family:var(--mono);color:var(--text3)">05</td>
+            <td>+ lag features (lm)</td>
+            <td><span class="badge b-lm">lm</span></td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--blue)">+lag-1 T2M, RH2M</td>
+            <td class="rmse-val">1.0276</td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--red)">+0.0560</td>
+            <td><span class="badge b-drop">Dropped</span></td>
+          </tr>
+          <tr>
+            <td style="font-family:var(--mono);color:var(--text3)">06</td>
+            <td>Cyclical doy encoding</td>
+            <td><span class="badge b-lm">lm</span></td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--blue)">doy → sin/cos</td>
+            <td class="rmse-val">0.9716</td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">0.0000</td>
+            <td><span class="badge b-kept">Kept</span></td>
+          </tr>
+          <tr class="dropped">
+            <td style="font-family:var(--mono);color:var(--text3)">07</td>
+            <td>+ doy_sin:T2M interaction (lm)</td>
+            <td><span class="badge b-lm">lm</span></td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--blue)">+doy_sin × T2M</td>
+            <td class="rmse-val">0.9730</td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--red)">+0.0014</td>
+            <td><span class="badge b-drop">Dropped</span></td>
+          </tr>
+          <tr class="dropped">
+            <td style="font-family:var(--mono);color:var(--text3)">08</td>
+            <td>+ T2M 7-day rolling mean (lm)</td>
+            <td><span class="badge b-lm">lm</span></td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--blue)">+T2M_7d_avg</td>
+            <td class="rmse-val">0.9725</td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--red)">+0.0009</td>
+            <td><span class="badge b-drop">Dropped</span></td>
+          </tr>
+          <tr>
+            <td style="font-family:var(--mono);color:var(--text3)">09</td>
+            <td>+ city factor on RF-ready base</td>
+            <td><span class="badge b-lm">lm</span></td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--blue)">+factor(city), Exp 6 base</td>
+            <td class="rmse-val">0.9388</td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--green)">−0.0328</td>
+            <td><span class="badge b-kept">Kept</span></td>
+          </tr>
+          <tr class="best">
+            <td style="font-family:var(--mono);color:var(--accent)">10</td>
+            <td><strong>Switch to Random Forest</strong></td>
+            <td><span class="badge b-rf">ranger</span></td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--green)">lm → ranger, Exp 6 features</td>
+            <td class="rmse-val rmse-best">0.7366</td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--green);font-weight:500">−0.2350</td>
+            <td><span class="badge b-best">Best ✦</span></td>
+          </tr>
+          <tr>
+            <td style="font-family:var(--mono);color:var(--amber)">11</td>
+            <td>Retest city factor on RF baseline</td>
+            <td><span class="badge b-rf">ranger</span></td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--amber)">+factor(city), Exp 10 base</td>
+            <td class="rmse-val" style="color:var(--text3)">pending</td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">—</td>
+            <td><span class="badge b-todo">Planned</span></td>
+          </tr>
+          <tr>
+            <td style="font-family:var(--mono);color:var(--amber)">12</td>
+            <td>Retest lag features on RF baseline</td>
+            <td><span class="badge b-rf">ranger</span></td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--amber)">+lag features, Exp 10 base</td>
+            <td class="rmse-val" style="color:var(--text3)">pending</td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">—</td>
+            <td><span class="badge b-todo">Planned</span></td>
+          </tr>
+          <tr>
+            <td style="font-family:var(--mono);color:var(--amber)">13</td>
+            <td>Final test set evaluation</td>
+            <td><span class="badge b-rf">ranger</span></td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--amber)">Best model → test (2021–2023)</td>
+            <td class="rmse-val" style="color:var(--text3)">pending</td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">—</td>
+            <td><span class="badge b-todo">Final</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-family:var(--mono);font-size:11px;color:var(--text3);margin-top:.75rem">* Faded rows = officially dropped. Amber rows = remaining planned experiments. Exp 13 runs once only on locked test set.</p>
+  </div>
+
+  <!-- Dropped directions -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">DROP</span>
+      <span class="section-title">Officially Dropped Directions</span>
+    </div>
+    <div class="drop-grid">
+      <div class="drop-card">
+        <div class="drop-tag">✗ Dropped</div>
+        <div class="drop-name">XGBoost</div>
+        <div class="drop-reason">Never started. Would require tuning, debugging, and interpretation in the final two weeks alongside presentation prep. Scope expansion at Week 6 costs more than it contributes. RF is already a strong nonlinear baseline.</div>
+      </div>
+      <div class="drop-card">
+        <div class="drop-tag">✗ Dropped</div>
+        <div class="drop-name">Interaction terms under lm</div>
+        <div class="drop-reason">Exp 7 (doy_sin:T2M) produced RMSE 0.9730 vs best 0.9716 — worse. Root cause confirmed: linear model cannot capture nonlinear signal. Retesting under lm would produce the same result.</div>
+      </div>
+      <div class="drop-card">
+        <div class="drop-tag">✗ Dropped</div>
+        <div class="drop-name">Rolling means under lm</div>
+        <div class="drop-reason">Exp 8 (T2M_7d_avg) produced RMSE 0.9725 — marginal degradation. Same root cause as interaction terms. Rolling means will be reconsidered only if Exp 11/12 on RF baseline show strong signal from temporal features.</div>
+      </div>
+      <div class="drop-card">
+        <div class="drop-tag">✗ Dropped</div>
+        <div class="drop-name">Lag features under lm</div>
+        <div class="drop-reason">Exp 5 produced RMSE 1.0276 — significantly worse than baseline under lm. Lag features are being retested on RF (Exp 12) since RF can exploit temporal autocorrelation. Under lm, this direction is closed.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- D4: Locked two-week plan -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">D4</span>
+      <span class="section-title">Locked Final Two-Week Plan</span>
+    </div>
+    <div class="plan-wrap">
+      <div class="plan-week">
+        <div class="plan-week-header">
+          <span class="plan-week-label">Week 7</span>
+          <span class="plan-week-title">Final Experiments + Test Evaluation</span>
+        </div>
+        <div class="plan-tasks">
+          <div class="plan-task">
+            <div class="task-num">7.1</div>
+            <div class="task-body">
+              Run Exp 11 — retest <code style="font-family:var(--mono);font-size:11px;background:var(--bg3);padding:1px 5px;border-radius:3px;color:var(--blue)">factor(city)</code> on RF baseline
+              <div class="task-sub">One controlled addition to Exp 10. Keep if improves, revert if not. Log result.</div>
+            </div>
+            <div class="task-status"><span class="badge b-todo">To do</span></div>
+          </div>
+          <div class="plan-task">
+            <div class="task-num">7.2</div>
+            <div class="task-body">
+              Run Exp 12 — retest lag features on RF baseline
+              <div class="task-sub">One controlled addition to Exp 10 (or 11 if kept). Log result with revert reason if worse.</div>
+            </div>
+            <div class="task-status"><span class="badge b-todo">To do</span></div>
+          </div>
+          <div class="plan-task">
+            <div class="task-num">7.3</div>
+            <div class="task-body">
+              Confirm best model and run final test set evaluation
+              <div class="task-sub">Evaluate best kept model on 2021–2023 test set. This runs ONCE. Record test_rmse alongside val_rmse. Do not re-tune after seeing test result.</div>
+            </div>
+            <div class="task-status"><span class="badge b-todo">To do</span></div>
+          </div>
+          <div class="plan-task">
+            <div class="task-num">7.4</div>
+            <div class="task-body">
+              Update Deliverables/week7.html with final experiment results
+              <div class="task-sub">Add Exp 11, 12, and test set result to the running deliverable file.</div>
+            </div>
+            <div class="task-status"><span class="badge b-todo">To do</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="plan-week">
+        <div class="plan-week-header">
+          <span class="plan-week-label">Week 8</span>
+          <span class="plan-week-title">Final Presentation + Submission</span>
+        </div>
+        <div class="plan-tasks">
+          <div class="plan-task">
+            <div class="task-num">8.1</div>
+            <div class="task-body">
+              Build final presentation
+              <div class="task-sub">Story: research question → agent framework → experiment sequence → key finding (RF discovery) → test result → what the agent learned vs what we designed in.</div>
+            </div>
+            <div class="task-status"><span class="badge b-todo">To do</span></div>
+          </div>
+          <div class="plan-task">
+            <div class="task-num">8.2</div>
+            <div class="task-body">
+              Write final reflection memo
+              <div class="task-sub">What did the agent discover autonomously vs what was guided? Was the improvement real? What would the next iteration study?</div>
+            </div>
+            <div class="task-status"><span class="badge b-todo">To do</span></div>
+          </div>
+          <div class="plan-task">
+            <div class="task-num">8.3</div>
+            <div class="task-body">
+              Final GitHub push — clean repo for submission
+              <div class="task-sub">Confirm all deliverables in /Deliverables, experiments.json complete, all commits labeled, README updated with final results.</div>
+            </div>
+            <div class="task-status"><span class="badge b-todo">To do</span></div>
+          </div>
+          <div class="plan-task">
+            <div class="task-num">8.4</div>
+            <div class="task-body">
+              Submit
+              <div class="task-sub">Final submission. Test set evaluated once, results locked, no post-hoc changes.</div>
+            </div>
+            <div class="task-status"><span class="badge b-todo">To do</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>STAT 390 · Solar AutoResearch · Week 6 · Scope Locked</span>
+    <span>Best val RMSE: 0.7366 · Exp 10 · ranger RF · −43% vs baseline</span>
+  </div>
+
+</div>
+</body>
+</html>
